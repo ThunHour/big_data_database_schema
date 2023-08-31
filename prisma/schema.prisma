@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:seak1812002@localhost:5432/datawarehouse?schema=public"
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  STUDENT
+}
+
+model User {
+  id           String         @id @default(uuid())
+  username     String         @unique
+  password     String
+  role         Role           @default(STUDENT)
+  studentInfo  StudentInfo?
+  employeeInfo EmployeeInfo?
+  personalInfo PersonalInfo?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  CourseDetail CourseDetail[]
+}
+
+model Major {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  shortName String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batch     Batch[]
+}
+
+model Semester {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  shortName String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  batchId   String
+  courses   Course[]
+}
+
+model Department {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  shortName    String         @unique
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  EmployeeInfo EmployeeInfo[]
+}
+
+model Batch {
+  id        String        @id @default(uuid())
+  number    Int
+  batchCode String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  Major     Major         @relation(fields: [majorId], references: [id])
+  majorId   String
+  Semester  Semester[]
+  stduents  StudentInfo[]
+}
+
+model StudentInfo {
+  id            String  @id @default(uuid())
+  studentIdCard String  @unique
+  Fee           Fee[]
+  User          User?   @relation(fields: [userId], references: [id])
+  userId        String? @unique
+  Batch         Batch?  @relation(fields: [batchId], references: [id])
+  batchId       String?
+}
+
+model EmployeeInfo {
+  id             String     @id @default(uuid())
+  employeeIdCard String     @unique
+  salary         Salary?
+  hire_date      DateTime
+  department     Department @relation(fields: [departmentId], references: [id])
+  departmentId   String
+  position       String
+  User           User?      @relation(fields: [userId], references: [id])
+  userId         String?    @unique
+  Course         Course[]
+}
+
+model PersonalInfo {
+  id        String @id @default(uuid())
+  firstName String
+  lastName  String
+  phone     String
+  email     String @unique
+  address   String
+  User      User   @relation(fields: [userId], references: [id])
+  userId    String @unique
+}
+
+model CourseDetail {
+  id          String       @id @default(uuid())
+  name        String
+  code        String
+  description String
+  Grade       Grade[]
+  attendance  Attendance[]
+  Course      Course?      @relation(fields: [courseId], references: [id])
+  courseId    String?
+  User        User?        @relation(fields: [userId], references: [id])
+  userId      String?
+}
+
+model AcademicRecord {
+  id String @id @default(uuid())
+  // Add academic record fields
+}
+
+model Attendance {
+  id             String        @id @default(uuid())
+  date           DateTime
+  present        Boolean
+  CourseDetail   CourseDetail? @relation(fields: [courseDetailId], references: [id])
+  courseDetailId String?
+}
+
+enum Rank {
+  A
+  B
+  C
+  D
+  E
+  F
+}
+
+model Grade {
+  id             Int          @id @default(autoincrement())
+  midterm        Float
+  final          Float
+  rank           Rank         @default(B)
+  courseDetail   CourseDetail @relation(fields: [courseDetailId], references: [id])
+  courseDetailId String
+}
+
+enum PayStatus {
+  QUATERLY
+  HALF_YEARLY
+  YEARLY
+}
+
+model Fee {
+  id           String       @id @default(uuid())
+  amount       Float
+  payStatus    PayStatus
+  status       String
+  studentInfo  StudentInfo? @relation(fields: [sudentInfoId], references: [id])
+  sudentInfoId String?
+}
+
+model Salary {
+  id             String       @id @default(uuid())
+  amount         Float
+  deductions     Float
+  employeeInfo   EmployeeInfo @relation(fields: [employeeInfoId], references: [id])
+  employeeInfoId String       @unique
+}
+
+model Course {
+  id             String         @id @default(uuid())
+  name           String
+  code           String
+  description    String
+  employeeInfo   EmployeeInfo?  @relation(fields: [employeeInfoId], references: [id])
+  courseDetails  CourseDetail[]
+  Semester       Semester       @relation(fields: [semesterId], references: [id])
+  semesterId     String
+  employeeInfoId String?
+}
